@@ -1,0 +1,47 @@
+name: rest-django-api_prod
+
+services:
+  app:
+    container_name: rest-django_app_prod
+    build:
+      context: .
+    restart: always
+    volumes:
+      - static-data:/vol/web
+    environment:
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16.4-alpine3.20
+    container_name: rest-django_db_prod
+    restart: always
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+   
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+  
+  proxy:
+    container_name: rest-django_proxy_prod
+    build: 
+      context: ./proxy
+    restart: always
+    depends_on:
+      - app
+    ports:
+      - 80:8000
+    volumes:
+      - static-data:/vol/static
+    
+volumes:
+  static-data:
+  postgresql-data:
